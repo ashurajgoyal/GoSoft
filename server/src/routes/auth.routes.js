@@ -1,0 +1,22 @@
+import { Router } from 'express';
+import * as c from '../controllers/auth.controller.js';
+import { asyncHandler as h } from '../utils/asyncHandler.js';
+import { validate } from '../middleware/validate.js';
+import { authenticate } from '../middleware/auth.js';
+import { authLimiter } from '../middleware/security.js';
+import * as v from '../validators/auth.js';
+
+const r = Router();
+r.post('/register', authLimiter, validate({ body: v.registerSchema }), h(c.register));
+r.post('/login', authLimiter, validate({ body: v.loginSchema }), h(c.login));
+r.post('/refresh', h(c.refresh));
+r.post('/logout', h(c.logout));
+r.post('/logout-all', authenticate, h(c.logoutAll));
+r.get('/me', authenticate, h(c.me));
+r.patch('/me', authenticate, validate({ body: v.profileSchema }), h(c.updateProfile));
+r.post('/verify-email', authLimiter, validate({ body: v.tokenSchema }), h(c.verifyEmail));
+r.post('/resend-verification', authLimiter, validate({ body: v.emailOnlySchema }), h(c.resendVerification));
+r.post('/forgot-password', authLimiter, validate({ body: v.emailOnlySchema }), h(c.forgotPassword));
+r.post('/reset-password', authLimiter, validate({ body: v.resetSchema }), h(c.resetPassword));
+r.post('/change-password', authenticate, validate({ body: v.changePasswordSchema }), h(c.changePassword));
+export default r;
