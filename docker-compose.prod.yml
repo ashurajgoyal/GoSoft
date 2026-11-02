@@ -1,0 +1,25 @@
+# Production stack on one server (VPS / EC2 / Lightsail).
+#   cp server/.env.example server/.env   # fill in real values
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml exec api node src/seed.js
+# Put Caddy / Nginx / Cloudflare in front of port 80 for HTTPS (required by Cashfree in production).
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes: [gosoft-mongo:/data/db]
+  api:
+    build: ./server
+    restart: unless-stopped
+    env_file: ./server/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/gosoft
+      NODE_ENV: production
+    depends_on: [mongo]
+  web:
+    build: { context: ./client }
+    restart: unless-stopped
+    ports: ["80:80"]
+    depends_on: [api]
+volumes:
+  gosoft-mongo:
